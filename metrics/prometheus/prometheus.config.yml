@@ -1,9 +1,12 @@
 global:
-  scrape_interval: 5s
+    scrape_interval: 5s
 scrape_configs:
-  - job_name: "FlowiseAI"
-    static_configs:
-      - targets: ["host.docker.internal:8889","host.docker.internal:3000"]
+    - job_name: 'flowise-app'
+      metrics_path: '/api/v1/metrics'
+      static_configs:
+          - targets: [ 'host.docker.internal:3000' ]
 
-    metrics_path: /api/v1/metrics
-    scheme: http
+    - job_name: 'otel-collector'
+      metrics_path: '/metrics'
+      static_configs:
+          - targets: [ 'host.docker.internal:8889' ]

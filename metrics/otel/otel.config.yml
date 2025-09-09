@@ -6,25 +6,25 @@ receivers:
       grpc:
         endpoint: 0.0.0.0:4317
   # The hostmetrics receiver is required to get correct infrastructure metrics in Datadog.
-  hostmetrics:
-    collection_interval: 10s
-    scrapers:
-      paging:
-        metrics:
-          system.paging.utilization:
-            enabled: true
-      cpu:
-        metrics:
-          system.cpu.utilization:
-            enabled: true
-      disk:
-      filesystem:
-        metrics:
-          system.filesystem.utilization:
-            enabled: true
-      load:
-      memory:
-      network:
+  # hostmetrics:
+  #   collection_interval: 10s
+  #   scrapers:
+  #     paging:
+  #       metrics:
+  #         system.paging.utilization:
+  #           enabled: true
+  #     cpu:
+  #       metrics:
+  #         system.cpu.utilization:
+  #           enabled: true
+  #     disk:
+  #     filesystem:
+  #       metrics:
+  #         system.filesystem.utilization:
+  #           enabled: true
+  #     load:
+  #     memory:
+  #     network:
 
   # The prometheus receiver scrapes metrics needed for the OpenTelemetry Collector Dashboard.
   prometheus:
@@ -57,6 +57,10 @@ processors:
 #       key: "replace_api_key"
 
 exporters:
+  debug:
+    verbosity: detailed  # Tùy chọn này giúp bạn xem chi tiết dữ liệu
+    sampling_initial: 5  # In ra 5 item đầu tiên để tránh spam quá nhiều
+    sampling_thereafter: 200  # Sau đó chỉ in mỗi item thứ 200
   prometheus:
     endpoint: "0.0.0.0:8889"
 
@@ -65,12 +69,12 @@ service:
     metrics:
       receivers: [hostmetrics, prometheus, otlp]
       processors: [batch]
-      exporters: [prometheus]
-    # traces:
-    #   receivers: [otlp]
-    #   processors: [batch]
-    #   exporters: [logging]
-    # logs:
-    #   receivers: [otlp]
-    #   processors: [batch]
-    #   exporters: [logging]
+      exporters: [debug, prometheus]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]

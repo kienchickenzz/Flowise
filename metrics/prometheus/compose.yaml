@@ -1,10 +1,10 @@
 services:
-  prometheus:
-    image: prom/prometheus
-    container_name: prometheus
-    volumes:
-      - ./prometheus.config.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-    extra_hosts:
-      - "host.docker.internal:host-gateway" 
+    prometheus:
+        image: prom/prometheus
+        container_name: prometheus
+        volumes:
+            - ./prometheus.config.yml:/etc/prometheus/prometheus.yml
+        ports:
+            - "9090:9090"
+        extra_hosts:
+            - "host.docker.internal:host-gateway" 
