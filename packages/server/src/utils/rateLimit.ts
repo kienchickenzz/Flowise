@@ -135,6 +135,9 @@ export class RateLimiterManager {
     }
 
     public async updateRateLimiter(chatFlow: IChatFlow, isInitialized?: boolean): Promise<void> {
+        console.log(`Processing rate limiter update for chatflow: ${chatFlow.id}`)
+        console.log(`apiConfig content:`, chatFlow.apiConfig)
+        
         if (!chatFlow.apiConfig) return
         const apiConfig = JSON.parse(chatFlow.apiConfig)
 

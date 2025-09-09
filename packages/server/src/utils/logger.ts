@@ -102,6 +102,9 @@ if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir)
 }
 
+console.log('Current LOG_LEVEL:', process.env.LOG_LEVEL);
+console.log('Config logging level:', config.logging.server.level);
+
 const logger = createLogger({
     format: combine(
         timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -117,7 +120,9 @@ const logger = createLogger({
     },
     exitOnError: false,
     transports: [
-        new transports.Console(),
+        new transports.Console({
+            level: config.logging.server.level ?? 'info'
+        }),
         ...(!process.env.STORAGE_TYPE || process.env.STORAGE_TYPE === 'local'
             ? [
                   new DailyRotateFile({

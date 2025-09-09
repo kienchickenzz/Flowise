@@ -202,6 +202,8 @@ class GoogleGenerativeAI_ChatModels implements INode {
     }
 
     async init(nodeData: INodeData, _: string, options: ICommonObject): Promise<any> {
+        console.log('Node inputs received:', Object.keys(nodeData.inputs || {}))
+        
         const credentialData = await getCredentialData(nodeData.credential ?? '', options)
         const apiKey = getCredentialParam('googleGenerativeAPIKey', credentialData, nodeData)
 

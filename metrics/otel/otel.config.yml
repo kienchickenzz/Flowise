@@ -47,26 +47,30 @@ processors:
     send_batch_size: 10
     timeout: 10s
 
-connectors:
-  datadog/connector:
+# connectors:
+#   datadog/connector:
+
+# exporters:
+#   datadog/exporter:
+#     api:
+#       site: us5.datadoghq.com
+#       key: "replace_api_key"
 
 exporters:
-  datadog/exporter:
-    api:
-      site: us5.datadoghq.com
-      key: "replace_api_key"
+  prometheus:
+    endpoint: "0.0.0.0:8889"
 
 service:
   pipelines:
     metrics:
-      receivers: [datadog/connector, hostmetrics, prometheus, otlp]
+      receivers: [hostmetrics, prometheus, otlp]
       processors: [batch]
-      exporters: [datadog/exporter]
-    traces:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [datadog/connector, datadog/exporter]
-    logs:
-      receivers: [otlp, filelog]
-      processors: [batch]
-      exporters: [datadog/exporter]
+      exporters: [prometheus]
+    # traces:
+    #   receivers: [otlp]
+    #   processors: [batch]
+    #   exporters: [logging]
+    # logs:
+    #   receivers: [otlp]
+    #   processors: [batch]
+    #   exporters: [logging]

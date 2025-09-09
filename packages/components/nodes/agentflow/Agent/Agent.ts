@@ -702,8 +702,10 @@ class Agent_Agentflow implements INode {
 
             // Initialize the LLM model instance
             const nodeInstanceFilePath = options.componentNodes[model].filePath as string
+            console.log(nodeInstanceFilePath)
             const nodeModule = await import(nodeInstanceFilePath)
             const newLLMNodeInstance = new nodeModule.nodeClass()
+            console.log(newLLMNodeInstance)
             const newNodeData = {
                 ...nodeData,
                 credential: modelConfig['FLOWISE_CREDENTIAL_ID'],
@@ -714,6 +716,7 @@ class Agent_Agentflow implements INode {
             }
 
             const llmWithoutToolsBind = (await newLLMNodeInstance.init(newNodeData, '', options)) as BaseChatModel
+            console.log('Model type:', llmWithoutToolsBind.constructor.name)
             let llmNodeInstance = llmWithoutToolsBind
 
             if (llmNodeInstance && toolsInstance.length > 0) {
@@ -723,6 +726,8 @@ class Agent_Agentflow implements INode {
 
                 // @ts-ignore
                 llmNodeInstance = llmNodeInstance.bindTools(toolsInstance)
+                console.log('New model type:', llmNodeInstance.constructor.name)
+                console.log('Model instance same as original:', llmNodeInstance === llmWithoutToolsBind)
             }
 
             // Prepare messages array

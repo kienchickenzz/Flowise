@@ -4,6 +4,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 const MASTER_MODEL_LIST = 'https://raw.githubusercontent.com/FlowiseAI/Flowise/main/packages/components/models.json'
+const MY_CONFIG = "/home/nguyen-duc-kien/OneDrive/My codespace/Study repo/Flowise/packages/components/models.json"
 
 export enum MODEL_TYPE {
     CHAT = 'chat',
@@ -32,7 +33,8 @@ const isValidUrl = (urlString: string) => {
 }
 
 const getModelConfig = async (category: MODEL_TYPE, name: string) => {
-    const modelFile = process.env.MODEL_LIST_CONFIG_JSON || MASTER_MODEL_LIST
+    // const modelFile = process.env.MODEL_LIST_CONFIG_JSON || MASTER_MODEL_LIST
+    const modelFile = process.env.MODEL_LIST_CONFIG_JSON || MY_CONFIG
 
     if (!modelFile) {
         throw new Error('MODEL_LIST_CONFIG_JSON not set')

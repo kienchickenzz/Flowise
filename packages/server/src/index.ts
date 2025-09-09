@@ -143,6 +143,12 @@ export class App {
                 logger.info('🔗 [server]: Redis event subscriber connected successfully')
             }
 
+            logger.error('🔴 TEST: Error level log')
+            logger.warn('🟡 TEST: Warn level log') 
+            logger.info('🔵 TEST: Info level log')
+            logger.verbose('🟣 TEST: Verbose level log')
+            logger.debug('🟢 TEST: Debug level log')
+
             // TODO: Remove this by end of 2025
             await migrateApiKeysFromJsonToDb(this.AppDataSource, this.identityManager.getPlatformType())
 
@@ -303,6 +309,15 @@ export class App {
                 )
             }
         }
+
+        this.app.get('/debug/session', (req, res) => {
+            res.json({
+                sessionId: req.sessionID,
+                sessionData: req.session,
+                sessionCookie: req.session.cookie,
+                user: req.user
+            })
+        })
 
         this.app.use('/api/v1', flowiseApiV1Router)
 

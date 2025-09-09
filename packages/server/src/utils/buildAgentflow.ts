@@ -486,6 +486,7 @@ function findConditionParent(nodeId: string, edges: IReactFlowEdge[], nodes: IRe
         return currentNode.id
     }
 
+    // FIXME: ???
     let currentId = nodeId
     const visited = new Set<string>()
 
@@ -578,6 +579,7 @@ async function determineNodesToIgnore(
                 condition.isFulfilled === false || !Object.prototype.hasOwnProperty.call(condition, 'isFulfilled') ? index : -1
             )
             .filter((index: number) => index !== -1)
+        logger.debug(`unfulfilledIndexes: ${unfulfilledIndexes}`)
 
         // Find nodes to ignore based on unfulfilled conditions
         for (const index of unfulfilledIndexes) {
@@ -865,6 +867,7 @@ const executeNode = async ({
         }
 
         // Get available variables and resolve them
+        // FIXME: availableVariables ở đây là gì?
         const availableVariables = await appDataSource.getRepository(Variable).findBy(getWorkspaceSearchOptions(workspaceId))
 
         // Prepare flow config
@@ -1308,10 +1311,13 @@ export const executeAgentFlow = async ({
 
     /*** Get chatflows and prepare data  ***/
     const flowData = chatflow.flowData
+    logger.debug(flowData)
     const parsedFlowData: IReactFlowObject = JSON.parse(flowData)
     const nodes = (parsedFlowData.nodes || []).filter((node) => node.data.name !== 'stickyNoteAgentflow')
     const edges = parsedFlowData.edges
     const { graph, nodeDependencies } = constructGraphs(nodes, edges)
+    logger.debug(JSON.stringify(nodeDependencies, null, 4))
+    logger.debug(JSON.stringify(graph, null, 4))
     const { graph: reversedGraph } = constructGraphs(nodes, edges, { isReversed: true })
     const startInputType = nodes.find((node) => node.data.name === 'startAgentflow')?.data.inputs?.startInputType as
         | 'chatInput'
@@ -1421,6 +1427,7 @@ export const executeAgentFlow = async ({
 
     // If it is human input, find the last checkpoint and resume
     if (humanInput) {
+        logger.debug( "Hello world" )
         if (!previousExecution) {
             throw new Error(`No previous execution found for session ${sessionId}`)
         }
@@ -1520,6 +1527,7 @@ export const executeAgentFlow = async ({
         // Update humanInput with the resolved startNodeId
         humanInput.startNodeId = startNodeId
     } else if (isRecursive && parentExecutionId) {
+        logger.debug( "Hello" )
         const { startingNodeIds: startingNodeIdsFromFlow } = getStartingNode(nodeDependencies)
         startingNodeIds.push(...startingNodeIdsFromFlow)
         checkForMultipleStartNodes(startingNodeIds, isRecursive, nodes)
@@ -1539,6 +1547,7 @@ export const executeAgentFlow = async ({
             parentExecutionId = newExecution.id
         }
     } else {
+        logger.debug( "Hi" )
         const { startingNodeIds: startingNodeIdsFromFlow } = getStartingNode(nodeDependencies)
         startingNodeIds.push(...startingNodeIdsFromFlow)
         checkForMultipleStartNodes(startingNodeIds, isRecursive, nodes)
@@ -1695,6 +1704,8 @@ export const executeAgentFlow = async ({
                 workspaceId,
                 subscriptionId
             })
+            logger.debug(`executionResult: ${JSON.stringify(executionResult, null, 4)}`)
+
 
             if (executionResult.agentFlowExecutedData) {
                 agentFlowExecutedData = executionResult.agentFlowExecutedData
