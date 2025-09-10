@@ -5,11 +5,10 @@ services:
         ports:
             - '6380:6379'
         volumes:
-            - redis_data:/data
+            - ./volumes/redis:/data
         networks:
             - flowise-net
-        environment:
-            REDIS_PASSWORD: ${REDIS_PASSWORD:-Pa55w.rd}
+        command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD:-Pa55w.rd}" ]
 
     postgres:
         image: postgres:15-alpine
@@ -36,10 +35,6 @@ services:
             interval: 1s
             timeout: 3s
             retries: 60
-
-volumes:
-    redis_data:
-        driver: local
 
 networks:
     flowise-net:

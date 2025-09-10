@@ -57,24 +57,25 @@ processors:
 #       key: "replace_api_key"
 
 exporters:
-  debug:
-    verbosity: detailed  # Tùy chọn này giúp bạn xem chi tiết dữ liệu
-    sampling_initial: 5  # In ra 5 item đầu tiên để tránh spam quá nhiều
-    sampling_thereafter: 200  # Sau đó chỉ in mỗi item thứ 200
+  # debug:
+  #   verbosity: detailed  # Tùy chọn này giúp bạn xem chi tiết dữ liệu
+  #   sampling_initial: 5  # In ra 5 item đầu tiên để tránh spam quá nhiều
+  #   sampling_thereafter: 200  # Sau đó chỉ in mỗi item thứ 200
   prometheus:
     endpoint: "0.0.0.0:8889"
 
 service:
   pipelines:
     metrics:
-      receivers: [hostmetrics, prometheus, otlp]
+      receivers: [ prometheus, otlp ]
       processors: [batch]
-      exporters: [debug, prometheus]
-    traces:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [debug]
-    logs:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [debug]
+      exporters: [prometheus]
+      # exporters: [debug, prometheus]
+    # traces:
+    #   receivers: [otlp]
+    #   processors: [batch]
+    #   exporters: [debug]
+    # logs:
+    #   receivers: [otlp]
+    #   processors: [batch]
+    #   exporters: [debug]
