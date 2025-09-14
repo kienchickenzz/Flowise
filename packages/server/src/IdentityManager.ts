@@ -25,6 +25,7 @@ import Auth0SSO from './enterprise/sso/Auth0SSO'
 import AzureSSO from './enterprise/sso/AzureSSO'
 import GithubSSO from './enterprise/sso/GithubSSO'
 import GoogleSSO from './enterprise/sso/GoogleSSO'
+import KeyCloakSSO from './enterprise/sso/KeyCloakSSO'
 import SSOBase from './enterprise/sso/SSOBase'
 import { InternalFlowiseError } from './errors/internalFlowiseError'
 import { Platform, UserPlan } from './Interface'
@@ -35,7 +36,7 @@ import { getRunningExpressApp } from './utils/getRunningExpressApp'
 import { ENTERPRISE_FEATURE_FLAGS } from './utils/quotaUsage'
 import Stripe from 'stripe'
 
-const allSSOProviders = ['azure', 'google', 'auth0', 'github']
+const allSSOProviders = ['azure', 'google', 'auth0', 'github', 'keycloak']
 export class IdentityManager {
     private static instance: IdentityManager
     private stripeManager?: StripeManager
@@ -235,6 +236,12 @@ export class IdentityManager {
                     const githubSSO = new GithubSSO(app, providerConfig)
                     githubSSO.initialize()
                     this.ssoProviders.set(providerName, githubSSO)
+                    break
+                }
+                case 'keycloak': {
+                    const keycloakSSO = new KeyCloakSSO(app, providerConfig)
+                    keycloakSSO.initialize()
+                    this.ssoProviders.set(providerName, keycloakSSO)
                     break
                 }
                 default:

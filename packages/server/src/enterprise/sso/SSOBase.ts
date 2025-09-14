@@ -54,7 +54,7 @@ abstract class SSOBase {
             const workspaceUserService = new WorkspaceUserService()
 
             let user: any = await userService.readUserByEmail(email, queryRunner)
-            let wu: any = {}
+            let wu: any = {} // workspace user
 
             if (!user) {
                 // In ENTERPRISE mode, we don't want to create a new user if the user is not found

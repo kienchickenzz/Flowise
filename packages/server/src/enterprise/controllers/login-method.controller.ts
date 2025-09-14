@@ -11,6 +11,7 @@ import Auth0SSO from '../sso/Auth0SSO'
 import { OrganizationService } from '../services/organization.service'
 import { Platform } from '../../Interface'
 import GithubSSO from '../sso/GithubSSO'
+import KeyCloakSSO from '../sso/KeyCloakSSO'
 
 export class LoginMethodController {
     public async create(req: Request, res: Response, next: NextFunction) {
@@ -74,7 +75,8 @@ export class LoginMethodController {
                     { providerName: 'azure', callbackURL: AzureSSO.getCallbackURL() },
                     { providerName: 'google', callbackURL: GoogleSSO.getCallbackURL() },
                     { providerName: 'auth0', callbackURL: Auth0SSO.getCallbackURL() },
-                    { providerName: 'github', callbackURL: GithubSSO.getCallbackURL() }
+                    { providerName: 'github', callbackURL: GithubSSO.getCallbackURL() },
+                    { providerName: 'keycloak', callbackURL: KeyCloakSSO.getCallbackURL() }
                 ]
             }
             let loginMethod: any
@@ -131,6 +133,9 @@ export class LoginMethodController {
                 return res.json(response)
             } else if (req.body.providerName === 'github') {
                 const response = await GithubSSO.testSetup(providers[0].config)
+                return res.json(response)
+            } else if (req.body.providerName === 'keycloak') {
+                const response = await KeyCloakSSO.testSetup(providers[0].config)
                 return res.json(response)
             } else {
                 return res.json({ error: 'Provider not supported' })
