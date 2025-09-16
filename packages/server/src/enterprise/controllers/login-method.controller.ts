@@ -12,6 +12,7 @@ import { OrganizationService } from '../services/organization.service'
 import { Platform } from '../../Interface'
 import GithubSSO from '../sso/GithubSSO'
 import KeyCloakSSO from '../sso/KeyCloakSSO'
+import logger from '../../utils/logger'
 
 export class LoginMethodController {
     public async create(req: Request, res: Response, next: NextFunction) {
@@ -30,9 +31,12 @@ export class LoginMethodController {
             queryRunner = getRunningExpressApp().AppDataSource.createQueryRunner()
             await queryRunner.connect()
             let organizationId
-            if (getRunningExpressApp().identityManager.getPlatformType() === Platform.CLOUD) {
+            const platformType = getRunningExpressApp().identityManager.getPlatformType()
+            logger.debug('Platform type:', platformType)
+            
+            if (platformType === Platform.CLOUD || platformType === Platform.OPEN_SOURCE) {
                 organizationId = undefined
-            } else if (getRunningExpressApp().identityManager.getPlatformType() === Platform.ENTERPRISE) {
+            } else if (platformType === Platform.ENTERPRISE) {
                 const organizationService = new OrganizationService()
                 const organizations = await organizationService.readOrganization(queryRunner)
                 if (organizations.length > 0) {
@@ -43,16 +47,25 @@ export class LoginMethodController {
             } else {
                 return res.status(StatusCodes.OK).json({})
             }
+            
+            logger.debug(`OrganizationId: ${organizationId}`)
             const loginMethodService = new LoginMethodService()
 
             const providers: string[] = []
 
             let loginMethod = await loginMethodService.readLoginMethodByOrganizationId(organizationId, queryRunner)
+            logger.debug(`Found login methods: ${loginMethod?.length || 0}`)
+            
             if (loginMethod) {
                 for (let method of loginMethod) {
-                    if (method.status === LoginMethodStatus.ENABLE) providers.push(method.name)
+                    logger.debug(`Method: ${method.name}, Status: ${method.status}, Expected: ${LoginMethodStatus.ENABLE}`)
+                    if (method.status === LoginMethodStatus.ENABLE) {
+                        providers.push(method.name)
+                        logger.debug(`Added provider: ${method.name}`)
+                    }
                 }
             }
+            logger.debug(`Final providers: ${JSON.stringify(providers)}`)
             return res.status(StatusCodes.OK).json({ providers: providers })
         } catch (error) {
             next(error)

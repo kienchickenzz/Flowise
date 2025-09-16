@@ -4,8 +4,8 @@ import { ErrorMessage } from '../Interface.Enterprise'
 // Check if the user has the required permission for a route
 export const checkPermission = (permission: string) => {
     return (req: Request, res: Response, next: NextFunction) => {
+        
         const user = req.user
-        // if the user is not logged in, return forbidden
         if (user) {
             if (user.isApiKeyValidated || user.isOrganizationAdmin) {
                 return next()
@@ -15,7 +15,8 @@ export const checkPermission = (permission: string) => {
                 return next()
             }
         }
-        // else throw 403 forbidden error
+
+        // If user is not logged in, return forbidden
         return res.status(403).json({ message: ErrorMessage.FORBIDDEN })
     }
 }
@@ -23,8 +24,8 @@ export const checkPermission = (permission: string) => {
 // checks for any permission, input is the permissions separated by comma
 export const checkAnyPermission = (permissionsString: string) => {
     return (req: Request, res: Response, next: NextFunction) => {
+        
         const user = req.user
-        // if the user is not logged in, return forbidden
         if (user) {
             if (user.isApiKeyValidated || user.isOrganizationAdmin) {
                 return next()
@@ -40,7 +41,8 @@ export const checkAnyPermission = (permissionsString: string) => {
                 }
             }
         }
-        // else throw 403 forbidden error
+
+        // If user is not logged in, return forbidden
         return res.status(403).json({ message: ErrorMessage.FORBIDDEN })
     }
 }

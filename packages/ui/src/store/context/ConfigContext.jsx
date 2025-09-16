@@ -13,11 +13,15 @@ export const ConfigProvider = ({ children }) => {
 
     useEffect(() => {
         const userSettings = platformsettingsApi.getSettings()
+        console.log('userSettings:', userSettings)
+
         Promise.all([userSettings])
             .then(([currentSettingsData]) => {
                 const finalData = {
                     ...currentSettingsData.data
                 }
+                console.log('PLATFORM_TYPE từ API:', finalData.PLATFORM_TYPE)
+
                 setConfig(finalData)
                 if (finalData.PLATFORM_TYPE) {
                     if (finalData.PLATFORM_TYPE === 'enterprise') {
@@ -29,9 +33,12 @@ export const ConfigProvider = ({ children }) => {
                         setEnterpriseLicensed(false)
                         setOpenSource(false)
                     } else {
-                        setOpenSource(true)
+                        setOpenSource(false)
                         setEnterpriseLicensed(false)
-                        setCloudLicensed(false)
+                        setCloudLicensed(true)
+                        // setOpenSource(true)
+                        // setEnterpriseLicensed(false)
+                        // setCloudLicensed(false)
                     }
                 }
 

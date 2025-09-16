@@ -48,11 +48,11 @@ export class LoginMethodService {
     }
 
     public async readLoginMethodByOrganizationId(organizationId: string | undefined, queryRunner: QueryRunner) {
-        if (organizationId) {
+        if (organizationId) { // Find login methods for a specific organization
             const organization = await this.organizationService.readOrganizationById(organizationId, queryRunner)
             if (!organization) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, OrganizationErrorMessage.ORGANIZATION_NOT_FOUND)
             return await queryRunner.manager.findBy(LoginMethod, { organizationId })
-        } else {
+        } else { // Find "global" login methods - not belonging to any organization
             return await queryRunner.manager.findBy(LoginMethod, { organizationId: IsNull() })
         }
     }

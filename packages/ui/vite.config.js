@@ -24,7 +24,8 @@ export default defineConfig(async ({ mode }) => {
         plugins: [react()],
         resolve: {
             alias: {
-                '@': resolve(__dirname, 'src'),
+                '@': resolve(__dirname, 'src'), // Always start from src/ directory
+
                 '@codemirror/state': resolve(__dirname, '../../node_modules/@codemirror/state'),
                 '@codemirror/view': resolve(__dirname, '../../node_modules/@codemirror/view'),
                 '@codemirror/language': resolve(__dirname, '../../node_modules/@codemirror/language'),
@@ -37,7 +38,7 @@ export default defineConfig(async ({ mode }) => {
                 '@lezer/highlight': resolve(__dirname, '../../node_modules/@lezer/highlight')
             }
         },
-        root: resolve(__dirname),
+        root: resolve( __dirname ),
         build: {
             outDir: './build'
         },
@@ -46,6 +47,29 @@ export default defineConfig(async ({ mode }) => {
             proxy,
             port: process.env.VITE_PORT ?? 8080,
             host: process.env.VITE_HOST
-        }
+        },
+        
+        // Tối ưu hóa dependency pre-bundling
+        optimizeDeps: {
+            // Bao gồm các dependencies lớn để pre-bundle
+            include: [
+                'react', 
+                'react-dom', 
+                '@mui/material', 
+                '@mui/icons-material',
+                '@mui/system',
+                'reactflow',
+                'lodash',
+                'moment',
+                'axios',
+                '@reduxjs/toolkit',
+                'react-redux',
+                'formik',
+                'yup',
+                'recharts'
+            ],
+            // Loại trừ các dependencies không cần pre-bundle
+            exclude: ['flowise-embed', 'flowise-embed-react']
+        },
     }
 })

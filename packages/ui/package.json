@@ -74,9 +74,9 @@
         "yup": "^0.32.9"
     },
     "scripts": {
-        "dev": "vite",
-        "start": "vite",
-        "build": "vite build",
+        "dev": "NODE_OPTIONS='--max-old-space-size=4096' vite --host",
+        "start": "NODE_OPTIONS='--max-old-space-size=4096' vite --host",
+        "build": "NODE_OPTIONS='--max-old-space-size=4096' vite build",
         "clean": "rimraf build",
         "nuke": "rimraf build node_modules .turbo"
     },

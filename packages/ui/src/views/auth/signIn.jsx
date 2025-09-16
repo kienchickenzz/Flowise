@@ -92,9 +92,11 @@ const SignInPage = () => {
 
     useEffect(() => {
         store.dispatch(logoutSuccess())
-        if (!isOpenSource) {
-            getDefaultProvidersApi.request()
-        }
+        console.log('🚀 Calling getDefaultProvidersApi.request()')
+        getDefaultProvidersApi.request()
+        // if (!isOpenSource) {
+            // getDefaultProvidersApi.request()
+        // }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -139,7 +141,13 @@ const SignInPage = () => {
     }, [ssoLoginApi.error])
 
     useEffect(() => {
+        console.log('🔍 getDefaultProvidersApi state changed:')
+        console.log('- Loading:', getDefaultProvidersApi.loading)
+        console.log('- Error:', getDefaultProvidersApi.error)
+        console.log('- Data:', getDefaultProvidersApi.data)
+        
         if (getDefaultProvidersApi.data && getDefaultProvidersApi.data.providers) {
+            console.log('✅ Providers found:', getDefaultProvidersApi.data.providers)
             //data is an array of objects, store only the provider attribute
             setConfiguredSsoProviders(getDefaultProvidersApi.data.providers.map((provider) => provider))
         }
@@ -193,7 +201,7 @@ const SignInPage = () => {
                     )}
                     <Stack sx={{ gap: 1 }}>
                         <Typography variant='h1'>Sign In</Typography>
-                        {isCloud && (
+                        {(isCloud || isOpenSource) && (
                             <Typography variant='body2' sx={{ color: theme.palette.grey[600] }}>
                                 Don&apos;t have an account?{' '}
                                 <Link style={{ color: `${theme.palette.primary.main}` }} to='/register'>
@@ -241,7 +249,7 @@ const SignInPage = () => {
                                         Forgot password?
                                     </Link>
                                 </Typography>
-                                {isCloud && (
+                                {(isCloud || isOpenSource) && (
                                     <Typography variant='body2' sx={{ color: theme.palette.grey[600], mt: 1, textAlign: 'right' }}>
                                         <a
                                             href='https://docs.flowiseai.com/migration-guide/cloud-migration'
@@ -337,6 +345,26 @@ const SignInPage = () => {
                                                 }
                                             >
                                                 Sign In With Github
+                                            </Button>
+                                        )
+                                )}
+
+                            { configuredSsoProviders &&
+                                configuredSsoProviders.map(
+                                    ( ssoProvider ) =>
+                                        ssoProvider === 'keycloak' && (
+                                            <Button
+                                                key={ssoProvider}
+                                                variant='outlined'
+                                                style={{ borderRadius: 12, height: 45, marginRight: 5, lineHeight: 0 }}
+                                                onClick={ () => signInWithSSO( ssoProvider ) }
+                                                startIcon={
+                                                    <Icon>
+                                                        <img src={GithubSSOLoginIcon} alt={'KeyCloak'} width={20} height={20} />
+                                                    </Icon>
+                                                }
+                                            >
+                                                Sign In With KeyCloak
                                             </Button>
                                         )
                                 )}

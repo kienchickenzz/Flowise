@@ -1580,6 +1580,7 @@ export const getEncryptionKey = async (): Promise<string> => {
         }
     }
     try {
+        // TODO: What is the content of encryption key?
         return await fs.promises.readFile(getEncryptionKeyPath(), 'utf8')
     } catch (error) {
         const encryptKey = generateEncryptKey()

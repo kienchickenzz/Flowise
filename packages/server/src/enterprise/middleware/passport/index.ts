@@ -110,10 +110,13 @@ export const initializeJwtCookieMiddleware = async (app: express.Application, id
                         Array.isArray(response.workspaceDetails) && response.workspaceDetails.length > 0
                             ? response.workspaceDetails[0]
                             : (response.workspaceDetails as WorkspaceUser)
+
+                    // Update workspace & organization user info
                     const workspaceUserService = new WorkspaceUserService()
                     workspaceUser.status = WorkspaceUserStatus.ACTIVE
                     workspaceUser.lastLogin = new Date().toISOString()
                     workspaceUser.updatedBy = workspaceUser.userId
+
                     const organizationUserService = new OrganizationUserService()
                     const { organizationUser } = await organizationUserService.readOrganizationUserByWorkspaceIdUserId(
                         workspaceUser.workspaceId,
@@ -126,6 +129,7 @@ export const initializeJwtCookieMiddleware = async (app: express.Application, id
                     await workspaceUserService.updateWorkspaceUser(workspaceUser, queryRunner)
                     await organizationUserService.updateOrganizationUser(organizationUser)
 
+                    // Get all user's workspaces
                     const workspaceUsers = await workspaceUserService.readWorkspaceUserByUserId(organizationUser.userId, queryRunner)
                     const assignedWorkspaces: IAssignedWorkspace[] = workspaceUsers.map((workspaceUser) => {
                         return {
@@ -136,7 +140,7 @@ export const initializeJwtCookieMiddleware = async (app: express.Application, id
                         } as IAssignedWorkspace
                     })
 
-                    let roleService = new RoleService()
+                    const roleService = new RoleService()
                     const ownerRole = await roleService.readGeneralRoleByName(GeneralRole.OWNER, queryRunner)
                     const role = await roleService.readRoleById(workspaceUser.roleId, queryRunner)
                     if (!role) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, RoleErrorMessage.ROLE_NOT_FOUND)
@@ -178,14 +182,19 @@ export const initializeJwtCookieMiddleware = async (app: express.Application, id
         )
     )
 
+    // Routing resolver - decides where user should be redirected to
     app.post('/api/v1/auth/resolve', async (req, res) => {
         // check for the organization, if empty redirect to the organization setup page for OpenSource and Enterprise Versions
         // for Cloud (Horizontal) version, redirect to the signin page
+        
+        // Always redirect to login page
         const expressApp = getRunningExpressApp()
         const platform = expressApp.identityManager.getPlatformType()
         if (platform === Platform.CLOUD) {
             return res.status(HttpStatusCode.Ok).json({ redirectUrl: '/signin' })
         }
+
+        // Onboarding logic for first time setup
         const orgService = new OrganizationService()
         const queryRunner = expressApp.AppDataSource.createQueryRunner()
         await queryRunner.connect()
@@ -202,13 +211,15 @@ export const initializeJwtCookieMiddleware = async (app: express.Application, id
                     return res.status(HttpStatusCode.Ok).json({ redirectUrl: '/organization-setup' })
             }
         }
+
+        // When there is at least one organization
         switch (platform) {
             case Platform.ENTERPRISE:
                 if (!identityManager.isLicenseValid()) {
                     return res.status(HttpStatusCode.Ok).json({ redirectUrl: '/license-expired' })
                 }
                 return res.status(HttpStatusCode.Ok).json({ redirectUrl: '/signin' })
-            default:
+            default: // For open source, redirect to login page with no constraint
                 return res.status(HttpStatusCode.Ok).json({ redirectUrl: '/signin' })
         }
     })
@@ -219,10 +230,12 @@ export const initializeJwtCookieMiddleware = async (app: express.Application, id
 
         jwt.verify(refreshToken, jwtRefreshSecret, async (err: any, payload: any) => {
             if (err || !payload) return res.status(401).json({ message: ErrorMessage.REFRESH_TOKEN_EXPIRED })
-            // @ts-ignore
+            
+                // @ts-ignore
             const loggedInUser = req.user as LoggedInUser
             let isSSO = false
             let newTokenResponse: any = {}
+            
             if (loggedInUser && loggedInUser.ssoRefreshToken) {
                 try {
                     newTokenResponse = await identityManager.getRefreshToken(loggedInUser.ssoProvider, loggedInUser.ssoRefreshToken)
@@ -234,10 +247,12 @@ export const initializeJwtCookieMiddleware = async (app: express.Application, id
                     return res.status(401).json({ message: ErrorMessage.REFRESH_TOKEN_EXPIRED })
                 }
             }
+            
             const meta = decryptToken(payload.meta)
             if (!meta) {
                 return res.status(401).json({ message: ErrorMessage.REFRESH_TOKEN_EXPIRED })
             }
+            
             if (isSSO) {
                 loggedInUser.ssoToken = newTokenResponse.access_token
                 if (newTokenResponse.refresh_token) {
@@ -254,11 +269,15 @@ export const initializeJwtCookieMiddleware = async (app: express.Application, id
         passport.authenticate('login', async (err: any, user: LoggedInUser) => {
             try {
                 if (err || !user) {
+                    // If there is a middleware error handler, pass the error to the centralized error handler. 
+                    // Otherwise, return a 401 response directly.
                     return next ? next(err) : res.status(401).json(err)
                 }
+
                 if (identityManager.isEnterprise() && !identityManager.isLicenseValid()) {
                     return res.status(401).json({ redirectUrl: '/license-expired' })
                 }
+                
                 req.login(user, { session: true }, async (error) => {
                     if (error) {
                         return next ? next(error) : res.status(401).json(error)
@@ -280,13 +299,15 @@ export const setTokenOrCookies = (
     redirect?: boolean,
     isSSO?: boolean
 ) => {
-    const token = generateJwtAuthToken(user)
+    const token = _generateJwtAuthToken(user)
+
     let refreshToken: string = ''
     if (regenerateRefreshToken) {
-        refreshToken = generateJwtRefreshToken(user)
+        refreshToken = _generateJwtRefreshToken(user)
     } else {
         refreshToken = req?.cookies?.refreshToken
     }
+
     const returnUser = generateSafeCopy(user)
     returnUser.isSSO = !isSSO ? false : isSSO
 
@@ -323,7 +344,7 @@ export const setTokenOrCookies = (
     }
 }
 
-export const generateJwtAuthToken = (user: any) => {
+const _generateJwtAuthToken = (user: any) => {
     let expiryInMinutes = -1
     if (user?.ssoToken) {
         const jwtHeader = jwt.decode(user.ssoToken, { complete: true })
@@ -341,7 +362,7 @@ export const generateJwtAuthToken = (user: any) => {
     return _generateJwtToken(user, expiryInMinutes, jwtAuthTokenSecret)
 }
 
-export const generateJwtRefreshToken = (user: any) => {
+const _generateJwtRefreshToken = (user: any) => {
     let expiryInMinutes = -1
     if (user.ssoRefreshToken) {
         const jwtHeader = jwt.decode(user.ssoRefreshToken, { complete: false })
@@ -397,7 +418,7 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
             return res.status(401).json({ redirectUrl: '/license-expired' })
         }
 
-        req.user = user
+        req.user = user // Add user to request object for subsequent middleware
         next()
     })(req, res, next)
 }

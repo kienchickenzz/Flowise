@@ -8,13 +8,18 @@ export default (apiFunc) => {
     const { setError, handleError } = useError()
 
     const request = async (...args) => {
+        console.log('🌐 useApi - Starting request with args:', args)
+        console.log('🌐 useApi - API function:', apiFunc.name || 'anonymous')
         setLoading(true)
         try {
             const result = await apiFunc(...args)
+            console.log('✅ useApi - Request successful:', result)
             setData(result.data)
             setError(null)
             setApiError(null)
         } catch (err) {
+            console.error('❌ useApi - Request failed:', err)
+            console.error('❌ useApi - Error response:', err.response)
             handleError(err || 'Unexpected Error!')
             setApiError(err || 'Unexpected Error!')
         } finally {

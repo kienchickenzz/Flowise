@@ -5,6 +5,8 @@ import auditService from '../services/audit'
 import { ErrorMessage, LoggedInUser, LoginActivityCode } from '../Interface.Enterprise'
 import { setTokenOrCookies } from '../middleware/passport'
 import axios from 'axios'
+import logger from '../../utils/logger'
+// import Request from 'express'
 
 const PROVIDER_NAME_KEYCLOAK_SSO = 'Keycloak SSO'
 
@@ -24,8 +26,13 @@ class KeycloakSSO extends SSOBase {
 
     setSSOConfig( ssoConfig: any ) {
         super.setSSOConfig( ssoConfig )
+
+        logger.debug( `setSSOConfig called with: ${JSON.stringify(ssoConfig, null, 2)}`)
+
         if ( ssoConfig ) {
             const { issuer, clientID, clientSecret, authorizationURL, tokenURL, userInfoURL } = this.ssoConfig
+
+            logger.debug( KeycloakSSO.getCallbackURL() )
 
             passport.use(
                 'keycloak',
@@ -50,28 +57,7 @@ class KeycloakSSO extends SSOBase {
                         
                         scope: 'openid profile email'
                     },
-                    async (
-                        issuer: string,
-                        profile: Profile,
-                        context: object,
-                        idToken: string | object,
-                        accessToken: string | object,
-                        refreshToken: string,
-                        done: VerifyCallback
-                    ) => {
-                        if ( profile.emails && profile.emails.length > 0 ) {
-                            const email = profile.emails[ 0 ].value
-                            return this.verifyAndLogin( this.app, email, done, profile, accessToken, refreshToken )
-                        } else {
-                            await auditService.recordLoginActivity(
-                                '<empty>',
-                                LoginActivityCode.UNKNOWN_USER,
-                                ErrorMessage.UNKNOWN_USER,
-                                this.getProviderName()
-                            )
-                            return done( { name: 'SSO_LOGIN_FAILED', message: ErrorMessage.UNKNOWN_USER }, undefined )
-                        }
-                    }
+                    this.handleKeycloakCallback.bind( this ) as any,
                 )
             )
         } else {
@@ -234,6 +220,30 @@ class KeycloakSSO extends SSOBase {
             // Logout errors are usually not critical - user is already logged out locally
             console.warn('Keycloak logout notification failed:', error)
             return { message: 'Local logout successful, remote logout failed' }
+        }
+    }
+
+    private async handleKeycloakCallback(
+        req: Request,
+        issuer: string,
+        profile: Profile,
+        context: object,
+        idToken: string | object,
+        accessToken: string | object,
+        refreshToken: string,
+        done: VerifyCallback
+    ) {
+        if ( profile.emails && profile.emails.length > 0 ) {
+            const email = profile.emails[ 0 ].value
+            return this.verifyAndLogin( this.app, email, done, profile, accessToken, refreshToken )
+        } else {
+            await auditService.recordLoginActivity(
+                '<empty>',
+                LoginActivityCode.UNKNOWN_USER,
+                ErrorMessage.UNKNOWN_USER,
+                this.getProviderName()
+            )
+            return done( { name: 'SSO_LOGIN_FAILED', message: ErrorMessage.UNKNOWN_USER }, undefined )
         }
     }
 }

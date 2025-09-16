@@ -158,7 +158,8 @@ export class IdentityManager {
     }
 
     public initializeSSO = async (app: express.Application) => {
-        if (this.getPlatformType() === Platform.CLOUD || this.getPlatformType() === Platform.ENTERPRISE) {
+        if ( this.getPlatformType() === Platform.CLOUD || this.getPlatformType() === Platform.ENTERPRISE ||
+            this.getPlatformType() === Platform.OPEN_SOURCE ) {
             const loginMethodService = new LoginMethodService()
             let queryRunner
             try {
